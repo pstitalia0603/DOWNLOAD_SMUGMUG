@@ -22,6 +22,7 @@ All images are downloaded to a local folder called smugmug_photos, which is auto
 
 Example layout:
 
+```
 your_project_directory/
 ├── download_smugmug_photos.py
 ├── smugmug_photos/
@@ -34,6 +35,7 @@ your_project_directory/
 │ │ ├── photo2.jpg
 │ │ └── ...
 │ └── ...
+```
 
 - Handles SmugMug API rate limits (429) and respects Retry-After headers
 - Logs remaining requests and reset times via rate limit headers
