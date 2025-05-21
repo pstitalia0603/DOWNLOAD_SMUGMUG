@@ -1,16 +1,12 @@
-# DOWNLOAD_SMUGMUG
+# Download your Smugmug photos from the API!
 
-# 🔐 Replace with your credentials
+## 🔐 Replace with your credentials
 
-# API DOCUMENTATION: https://api.smugmug.com/api/v2/doc/tutorial/basics.html
+- API DOCUMENTATION: https://api.smugmug.com/api/v2/doc/tutorial/basics.html
+- https://api.smugmug.com/api/v2/doc
+- FIND API INFO: https://www.smugmug.com/app/developer
 
-# https://api.smugmug.com/api/v2/doc
-
-# FIND API INFO: https://www.smugmug.com/app/developer
-
-Download your Smugmug photos from the API!
-
-# 📸 SmugMug Photo Downloader
+## 📸 SmugMug Photo Downloader
 
 A Python script to authenticate with the SmugMug API via OAuth 1.0a, retrieve all albums and images for a user, and download the images organized by album folder.
 
@@ -43,13 +39,14 @@ Install requirements:
 pip install requests requests_oauthlib
 ```
 
-🔐 Configuration
+## 🔐 Configuration
+
 Update your script with your SmugMug API credentials:
 
-API_KEY = "YOUR_API_KEY"
-API_SECRET = "YOUR_API_SECRET"
+- API_KEY = "YOUR_API_KEY"
+- API_SECRET = "YOUR_API_SECRET"
 
-🧪 Usage
+## 🧪 Usage
 
 Run the script:
 
@@ -67,7 +64,8 @@ Fetch all images from each album
 
 Download images into a folder named smugmug_photos
 
-🧠 Notes
+## 🧠 Notes
+
 SmugMug paginates API responses; this script handles pagination automatically.
 
 SmugMug imposes a rate limit on API usage. If you hit the limit (status code 429), the script will pause and retry automatically.
@@ -76,12 +74,14 @@ Album names are sanitized for safe folder creation.
 
 Duplicate images will not be re-downloaded if they already exist locally.
 
-📝 To-Do
+## 📝 To-Do
+
 Add support for incremental syncing (skip albums that haven’t changed)
 
 Add progress bar
 
 Add logging or summary report
 
-📄 License
+## 📄 License
+
 MIT License. Use freely and modify as needed.
