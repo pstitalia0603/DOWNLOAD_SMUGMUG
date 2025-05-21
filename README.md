@@ -16,13 +16,24 @@ A Python script to authenticate with the SmugMug API via OAuth 1.0a, retrieve al
 - Fetches user info (nickname, user key, etc.)
 - Retrieves all albums (auto-paginated)
 - Retrieves all images within each album (auto-paginated)
-- Downloads all images into a local folder structure like:
 
-smugmug_photos/
-Album Name 1/
-image1.jpg
-image2.jpg
-Album Name 2/
+📁 Folder Structure
+All images are downloaded to a local folder called smugmug_photos, which is automatically created in the same directory as the script. Inside that folder, each album is saved in its own subfolder named after the album title.
+
+Example layout:
+
+your_project_directory/
+├── download_smugmug_photos.py
+├── smugmug_photos/
+│ ├── Summer Vacation 2023/
+│ │ ├── IMG_001.jpg
+│ │ ├── IMG_002.jpg
+│ │ └── ...
+│ ├── Family Reunion/
+│ │ ├── photo1.jpg
+│ │ ├── photo2.jpg
+│ │ └── ...
+│ └── ...
 
 - Handles SmugMug API rate limits (429) and respects Retry-After headers
 - Logs remaining requests and reset times via rate limit headers
