@@ -9,8 +9,8 @@ from datetime import datetime
 # API DOCUMENTATION: https://api.smugmug.com/api/v2/doc/tutorial/basics.html
 # https://api.smugmug.com/api/v2/doc
 # FIND API INFO: https://www.smugmug.com/app/developer
-API_KEY = "YOUR_API_KEY"
-API_SECRET = "YOUR_API_SECRET"
+API_KEY = "API_KEY"
+API_SECRET = "API_SECRET"
 
 # OAuth endpoints
 REQUEST_TOKEN_URL = "https://api.smugmug.com/services/oauth/1.0a/getRequestToken"
@@ -20,7 +20,6 @@ ACCESS_TOKEN_URL = "https://api.smugmug.com/services/oauth/1.0a/getAccessToken"
 # Where to save downloaded photos
 DOWNLOAD_FOLDER = os.path.abspath("smugmug_photos")
 print(f"Downloading to folder: {DOWNLOAD_FOLDER}")
-
 
 def oauth_login():
     print("🔐 Starting OAuth session...")
@@ -107,17 +106,36 @@ def check_rate_limit(response):
             time.sleep(60)
 
 
+# def get_albums(session, user_uri):
+#     albums = []
+#     url = f"https://api.smugmug.com{user_uri}!albums?count=300"
+#     while url:
+#         print(f"📥 Fetching albums: {url}")
+#         resp = session.get(url, headers={"Accept": "application/json"})
+#         resp.raise_for_status()
+#         data = resp.json()
+#         albums.extend(data["Response"].get("Album", []))
+#       #  next_page = data["Response"].get("NextPage")
+#       #  url = f"https://api.smugmug.com{next_page}" if next_page else None
+#         next_page = data["Response"].get("Pages")
+#         url = f"https://api.smugmug.com{next_page}" if next_page else None
+#     return albums
+
 def get_albums(session, user_uri):
     albums = []
-    url = f"https://api.smugmug.com{user_uri}!albums?count=300"
+    url = f"https://api.smugmug.com{user_uri}!albums?count=300"  # You can leave count=300
     while url:
         print(f"📥 Fetching albums: {url}")
         resp = session.get(url, headers={"Accept": "application/json"})
         resp.raise_for_status()
         data = resp.json()
         albums.extend(data["Response"].get("Album", []))
-        next_page = data["Response"].get("NextPage")
+
+        # 🔧 FIXED: Use "Pages.NextPage" instead of "NextPage"
+        next_page = data["Response"].get("Pages", {}).get("NextPage")
         url = f"https://api.smugmug.com{next_page}" if next_page else None
+
+    print(f"✅ Total albums retrieved: {len(albums)}")
     return albums
 
 
@@ -147,66 +165,40 @@ def get_images(session, album_uri):
 
 
 def download_image(session, image, album_name):
-    """
-    Downloads a single image or video from a SmugMug album.
-
-    This function determines whether the item is an image or a video and attempts
-    to download it in the best available quality. Files are saved into a local
-    folder named after the album, inside the DOWNLOAD_FOLDER.
-
-    Args:
-        session: An authenticated OAuth1 session.
-        image: A dictionary representing an image or video returned by the SmugMug API.
-        album_name: The name of the album this image/video belongs to.
-    """
     try:
-        # Get the image's original filename, or use a fallback if not present
         filename = image.get("FileName", "unknown.dat")
-
-        # Extract the API URI to get more details about this image
         image_uri = image["Uris"]["Image"]["Uri"]
         detail_url = f"https://api.smugmug.com{image_uri}"
-
-        # Make a request to retrieve detailed metadata for the image
         image_info = session.get(
             detail_url, headers={"Accept": "application/json"}
         ).json()
 
         img_data = image_info["Response"]["Image"]
-
-        # Determine if the media is a video
         is_video = img_data.get("IsVideo", False)
 
-        # Build the path for the album folder and create it if it doesn't exist
+        # Create album folder if it doesn't exist
         album_folder = os.path.join(DOWNLOAD_FOLDER, album_name)
         os.makedirs(album_folder, exist_ok=True)
-
-        # Construct the full file path for the downloaded file
         file_path = os.path.join(album_folder, filename)
 
-        # Skip download if the file already exists
+        # Skip if already downloaded
         if os.path.exists(file_path):
             print(f"⚠️ Already exists, skipping: {file_path}")
             return
 
         if is_video:
             print(f"🎥 Video detected: {filename}")
-
-            # Try to get the URI for the highest quality video
+            # Attempt to get video URL
             largest_video_uri = (
                 img_data.get("Uris", {}).get("LargestVideo", {}).get("Uri")
             )
             if largest_video_uri:
-                # Retrieve video metadata
                 video_detail_url = f"https://api.smugmug.com{largest_video_uri}"
                 video_info = session.get(
                     video_detail_url, headers={"Accept": "application/json"}
                 ).json()
-
-                # Extract the direct video URL
                 video_url = video_info["Response"]["LargestVideo"].get("Url")
                 if video_url:
-                    # Download and save the video
                     video_response = session.get(video_url)
                     with open(file_path, "wb") as f:
                         f.write(video_response.content)
@@ -216,26 +208,21 @@ def download_image(session, image, album_name):
             else:
                 print(f"❌ No 'LargestVideo' URI for {filename}")
         else:
-            # Try to find a downloadable image URL in order of preferred quality
+            # Handle image download
             image_url = (
-                img_data.get("ArchivedUri") or
-                img_data.get("OriginalUri") or
-                img_data.get("LargestImageUrl")
+                img_data.get("ArchivedUri")
+                or img_data.get("OriginalUri")
+                or img_data.get("LargestImageUrl")
             )
             if not image_url:
                 print(f"❌ No downloadable image URL found for {filename}")
                 return
-
-            # Download and save the image
             img_response = session.get(image_url)
             with open(file_path, "wb") as f:
                 f.write(img_response.content)
             print(f"✅ Downloaded image: {file_path}")
-
     except Exception as e:
-        # Catch and report any errors encountered during download
         print(f"❌ Error downloading image/video {image.get('FileName')}: {e}")
-
 
 
 def main():
@@ -248,6 +235,7 @@ def main():
     print(f"👋 Authenticated as: {user_info['NickName']}")
 
     albums = get_albums(session, user_info["Uri"])
+    print(f"📦 Total albums fetched: {len(albums)}")
     total_albums = len(albums)
     if total_albums == 0:
         print("No albums found.")
